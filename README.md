@@ -16,6 +16,7 @@ This project demonstrates Azure Site Recovery (ASR) capabilities for Azure-to-Az
       - [Configuration File Setup](#configuration-file-setup)
       - [Required Configuration Values](#required-configuration-values)
       - [Setting Configuration Values](#setting-configuration-values)
+    - [Deployment](#deployment)
 
 ## Key Components
 
@@ -174,3 +175,23 @@ pulumi config set --secret pulumi-asr-pmk-poc:vmAdminPassword <your_secure_passw
 - Ensure your password meets Azure VM password requirements (12+ characters, complexity requirements)
 - The `encryptionsalt` is generated automatically when you first set a secret value
 - All team members need to configure their own `Pulumi.dev.yaml` file locally
+
+### Deployment
+
+Once you have completed the backend setup and configuration, you can deploy the ASR infrastructure:
+
+```bash
+# Deploy the infrastructure
+pulumi up
+```
+
+This command will:
+1. Preview the resources to be created
+2. Prompt for confirmation
+3. Deploy the Azure Site Recovery infrastructure including:
+   - Source VM with SSE-PMK encryption
+   - Recovery Services Vault
+   - Azure-to-Azure replication configuration
+   - Target region infrastructure
+
+**Note:** The deployment may take several minutes to complete, especially the ASR replication setup.
