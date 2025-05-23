@@ -1,0 +1,10 @@
+name: pulumi-asr-pmk-poc
+description: ASR with SSE-PMK POC - Azure Site Recovery with Server-Side Encryption using Platform-Managed Keys
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: azure-typescript
