@@ -1,149 +1,176 @@
- # Azure Native TypeScript Pulumi Template
+# Azure Site Recovery (ASR) with Platform-Managed Keys POC
 
- This template provides a minimal, ready-to-go Pulumi program for deploying Azure resources using the Azure Native provider in TypeScript. It establishes a basic infrastructure stack that you can use as a foundation for more complex deployments.
+This project demonstrates Azure Site Recovery (ASR) capabilities for Azure-to-Azure VM replication with Server-Side Encryption using Platform-Managed Keys (SSE-PMK). The infrastructure is managed using Pulumi with Azure Blob Storage as the state backend.
 
- ## When to Use This Template
+- [Azure Site Recovery (ASR) with Platform-Managed Keys POC](#azure-site-recovery-asr-with-platform-managed-keys-poc)
+  - [Key Components](#key-components)
+  - [Getting Started](#getting-started)
+    - [Pulumi State Backend Setup](#pulumi-state-backend-setup)
+      - [Quick Start](#quick-start)
+      - [Prerequisites](#prerequisites)
+      - [What Gets Created](#what-gets-created)
+      - [Manual Commands (if needed)](#manual-commands-if-needed)
+      - [Troubleshooting](#troubleshooting)
+      - [Cleanup](#cleanup)
+    - [Pulumi Configuration](#pulumi-configuration)
+      - [Configuration File Setup](#configuration-file-setup)
+      - [Required Configuration Values](#required-configuration-values)
+      - [Setting Configuration Values](#setting-configuration-values)
 
- - You need a quick boilerplate for Azure Native deployments with Pulumi and TypeScript
- - You want to create a Resource Group and Storage Account as a starting point
- - You're exploring Pulumi's Azure Native SDK and TypeScript support
+## Key Components
 
- ## Prerequisites
+- Source VM with SSE-PMK encryption
+- Recovery Services Vault for ASR
+- Azure-to-Azure replication configuration
+- Target region infrastructure for failover
 
- - An active Azure subscription
- - Node.js (LTS) installed
- - A Pulumi account and CLI already installed and configured
- - Azure credentials available (e.g., via `az login` or environment variables)
+## Getting Started
 
- ## Usage
+### Pulumi State Backend Setup
 
- Scaffold a new project from the Pulumi registry template:
- ```bash
- pulumi new azure-typescript
- ```
+Before deploying the ASR infrastructure, you need to set up the Pulumi state backend using Azure Blob Storage.
 
- Follow the prompts to:
- 1. Name your project and stack
- 2. (Optionally) override the default Azure location
+#### Quick Start
 
- Once the project is created:
- ```bash
- cd <your-project-name>
- pulumi config set azure-native:location <your-region>
- pulumi up
- ```
+```bash
+# 1. Setup backend
+./setup-pulumi-backend.sh
 
- ## Project Layout
 
- ```
- .
- ├── Pulumi.yaml       # Project metadata & template configuration
- ├── index.ts          # Main Pulumi program defining resources
- ├── package.json      # Node.js dependencies and project metadata
- └── tsconfig.json     # TypeScript compiler options
- ```
+# 2. Validate setup
+./validate-backend.sh
+```
 
- ## Configuration
+#### Prerequisites
 
- Pulumi configuration lets you customize deployment parameters. Set these configuration values before deployment:
+- Azure CLI installed and logged in (`az login`)
+- Appropriate Azure permissions (create resources, assign RBAC)
+- Pulumi CLI installed (optional - can be done later)
 
- ### Azure Provider Configuration
- - **azure-native:location** (string)
-   - Description: Primary Azure region to provision resources in
-   - Example: `eastus`
-   - Command: `pulumi config set azure-native:location eastus`
+#### What Gets Created
 
- ### ASR PMK POC Configuration
- - **pulumi-asr-pmk-poc:targetLocation** (string)
-   - Description: Target Azure region for disaster recovery
-   - Example: `westus`
-   - Command: `pulumi config set pulumi-asr-pmk-poc:targetLocation westus`
+| Resource | Name | Purpose |
+|----------|------|---------|
+| Resource Group | `pulumi-state-rg` | Container for backend resources |
+| Storage Account | `pulumistate<suffix>` | Stores Pulumi state files |
+| Blob Container | `pulumi-backend` | Container for state blobs |
+| RBAC Role | Storage Blob Data Contributor | Access permissions |
 
- - **pulumi-asr-pmk-poc:resourceGroupNamePrefix** (string)
-   - Description: Prefix for resource group names
-   - Example: `pmkAsrPoc`
-   - Command: `pulumi config set pulumi-asr-pmk-poc:resourceGroupNamePrefix pmkAsrPoc`
+**Backend URL:** `azblob://pulumi-backend`
 
- - **pulumi-asr-pmk-poc:vmAdminUsername** (string)
-   - Description: Administrator username for virtual machines
-   - Example: `azureuser`
-   - Command: `pulumi config set pulumi-asr-pmk-poc:vmAdminUsername azureuser`
+#### Manual Commands (if needed)
 
- - **pulumi-asr-pmk-poc:vmAdminPassword** (string, secure)
-   - Description: Administrator password for virtual machines
-   - Command: `pulumi config set --secret pulumi-asr-pmk-poc:vmAdminPassword <your-secure-password>`
+```bash
+# Prerequisites
+az login
+az account set --subscription "<SUBSCRIPTION_ID>"
 
- - **pulumi-asr-pmk-poc:sourceVmName** (string)
-   - Description: Name of the source virtual machine
-   - Example: `sourcevm-pmk`
-   - Command: `pulumi config set pulumi-asr-pmk-poc:sourceVmName sourcevm-pmk`
 
- - **pulumi-asr-pmk-poc:vmSize** (string)
-   - Description: Azure VM size/SKU for virtual machines
-   - Example: `Standard_DS2_v2`
-   - Command: `pulumi config set pulumi-asr-pmk-poc:vmSize Standard_DS2_v2`
+# Configure Pulumi
+export AZURE_STORAGE_ACCOUNT=pulumistate<suffix>
+pulumi login azblob://pulumi-backend
+```
 
- ### VM Image Configuration
- - **pulumi-asr-pmk-poc:sourceVmImagePublisher** (string)
-   - Description: VM image publisher
-   - Example: `Canonical`
-   - Command: `pulumi config set pulumi-asr-pmk-poc:sourceVmImagePublisher Canonical`
+#### Troubleshooting
 
- - **pulumi-asr-pmk-poc:sourceVmImageOffer** (string)
-   - Description: VM image offer
-   - Example: `0001-com-ubuntu-server-jammy`
-   - Command: `pulumi config set pulumi-asr-pmk-poc:sourceVmImageOffer 0001-com-ubuntu-server-jammy`
+**Check current backend:**
 
- - **pulumi-asr-pmk-poc:sourceVmImageSku** (string)
-   - Description: VM image SKU
-   - Example: `22_04-lts-gen2`
-   - Command: `pulumi config set pulumi-asr-pmk-poc:sourceVmImageSku 22_04-lts-gen2`
+```bash
+pulumi whoami -v
+```
 
- - **pulumi-asr-pmk-poc:sourceVmImageVersion** (string)
-   - Description: VM image version
-   - Example: `latest`
-   - Command: `pulumi config set pulumi-asr-pmk-poc:sourceVmImageVersion latest`
+**Re-login to backend:**
 
- ### Quick Setup
- To configure all settings at once, run these commands:
- ```bash
- pulumi config set azure-native:location eastus
- pulumi config set pulumi-asr-pmk-poc:targetLocation westus
- pulumi config set pulumi-asr-pmk-poc:resourceGroupNamePrefix pmkAsrPoc
- pulumi config set pulumi-asr-pmk-poc:vmAdminUsername azureuser
- pulumi config set --secret pulumi-asr-pmk-poc:vmAdminPassword <your-secure-password>
- pulumi config set pulumi-asr-pmk-poc:sourceVmName sourcevm-pmk
- pulumi config set pulumi-asr-pmk-poc:vmSize Standard_DS2_v2
- pulumi config set pulumi-asr-pmk-poc:sourceVmImagePublisher Canonical
- pulumi config set pulumi-asr-pmk-poc:sourceVmImageOffer 0001-com-ubuntu-server-jammy
- pulumi config set pulumi-asr-pmk-poc:sourceVmImageSku 22_04-lts-gen2
- pulumi config set pulumi-asr-pmk-poc:sourceVmImageVersion latest
- ```
+```bash
+pulumi login azblob://pulumi-backend
+```
 
- ## Resources Created
+**Verify Azure resources:**
 
- 1. **Resource Group**: A container for all other resources
- 2. **Storage Account**: A StorageV2 account with Standard_LRS SKU
+```bash
+az group show --name pulumi-state-rg
+az storage account list --resource-group pulumi-state-rg
+```
 
- ## Outputs
+#### Cleanup
 
- After `pulumi up`, the following output is exported:
- - **primaryStorageKey**: The primary access key for the created Storage Account
+```bash
+# Delete Pulumi resources first
+pulumi destroy
 
- Retrieve it with:
- ```bash
- pulumi stack output primaryStorageKey
- ```
 
- ## Next Steps
+# Then delete backend resources
+az group delete --name pulumi-state-rg
+```
 
- - Extend this template by adding more Azure Native resources (e.g., Networking, App Services)
- - Modularize your stack with Pulumi Components for reusable architectures
- - Integrate with CI/CD pipelines (GitHub Actions, Azure DevOps, etc.)
+⚠️ **Warning:** Deleting the backend makes it harder to manage remaining Pulumi resources.
 
- ## Getting Help
+### Pulumi Configuration
 
- If you have questions or run into issues:
- - Explore the Pulumi docs: https://www.pulumi.com/docs/
- - Join the Pulumi Community on Slack: https://pulumi-community.slack.com/
- - File an issue on the Pulumi Azure Native SDK GitHub: https://github.com/pulumi/pulumi-azure-native/issues
+Since `Pulumi.dev.yaml` is excluded from version control for security reasons, you need to create and configure it locally after setting up the backend.
+
+#### Configuration File Setup
+
+Create a `Pulumi.dev.yaml` file in the project root with the following structure:
+
+```yaml
+encryptionsalt: v1:Nbyai7cCbXw=:v1:V+X0OMAPW+Vc7TtY:eC9aesY108uutfwbI2IlmePhCfLG+A==
+config:
+  azure-native:location: eastus
+  pulumi-asr-pmk-poc:targetLocation: westus
+  pulumi-asr-pmk-poc:resourceGroupNamePrefix: pmkAsrPoc
+  pulumi-asr-pmk-poc:vmAdminUsername: azureuser
+  pulumi-asr-pmk-poc:vmAdminPassword:
+    secure: v1:DmE5mEeNw76HMFPQ:tPHKJwWydH/GoMwLfH9nQG1ZUDR8sdr+qo6oFQ==
+  pulumi-asr-pmk-poc:sourceVmName: sourcevm-pmk
+  pulumi-asr-pmk-poc:vmSize: Standard_DS2_v2
+  pulumi-asr-pmk-poc:sourceVmImagePublisher: Canonical
+  pulumi-asr-pmk-poc:sourceVmImageOffer: 0001-com-ubuntu-server-jammy
+  pulumi-asr-pmk-poc:sourceVmImageSku: 22_04-lts-gen2
+  pulumi-asr-pmk-poc:sourceVmImageVersion: latest
+```
+
+#### Required Configuration Values
+
+| Configuration Key | Description | Example Value |
+|-------------------|-------------|---------------|
+| `azure-native:location` | Primary Azure region for source resources | `eastus` |
+| `pulumi-asr-pmk-poc:targetLocation` | Target Azure region for ASR replication | `westus` |
+| `pulumi-asr-pmk-poc:resourceGroupNamePrefix` | Prefix for resource group names | `pmkAsrPoc` |
+| `pulumi-asr-pmk-poc:vmAdminUsername` | VM administrator username | `azureuser` |
+| `pulumi-asr-pmk-poc:vmAdminPassword` | VM administrator password (encrypted) | `<secure_value>` |
+| `pulumi-asr-pmk-poc:sourceVmName` | Name of the source VM | `sourcevm-pmk` |
+| `pulumi-asr-pmk-poc:vmSize` | Azure VM size | `Standard_DS2_v2` |
+| `pulumi-asr-pmk-poc:sourceVmImagePublisher` | VM image publisher | `Canonical` |
+| `pulumi-asr-pmk-poc:sourceVmImageOffer` | VM image offer | `0001-com-ubuntu-server-jammy` |
+| `pulumi-asr-pmk-poc:sourceVmImageSku` | VM image SKU | `22_04-lts-gen2` |
+| `pulumi-asr-pmk-poc:sourceVmImageVersion` | VM image version | `latest` |
+
+#### Setting Configuration Values
+
+You can set configuration values using the Pulumi CLI:
+
+```bash
+# Set basic configuration
+pulumi config set azure-native:location eastus
+pulumi config set pulumi-asr-pmk-poc:targetLocation westus
+pulumi config set pulumi-asr-pmk-poc:resourceGroupNamePrefix pmkAsrPoc
+pulumi config set pulumi-asr-pmk-poc:vmAdminUsername azureuser
+pulumi config set pulumi-asr-pmk-poc:sourceVmName sourcevm-pmk
+pulumi config set pulumi-asr-pmk-poc:vmSize Standard_DS2_v2
+
+# Set VM image configuration
+pulumi config set pulumi-asr-pmk-poc:sourceVmImagePublisher Canonical
+pulumi config set pulumi-asr-pmk-poc:sourceVmImageOffer 0001-com-ubuntu-server-jammy
+pulumi config set pulumi-asr-pmk-poc:sourceVmImageSku 22_04-lts-gen2
+pulumi config set pulumi-asr-pmk-poc:sourceVmImageVersion latest
+
+# Set secure password (will be encrypted automatically)
+pulumi config set --secret pulumi-asr-pmk-poc:vmAdminPassword <your_secure_password>
+```
+
+**Important Notes:**
+- The `vmAdminPassword` should be set as a secret using the `--secret` flag
+- Ensure your password meets Azure VM password requirements (12+ characters, complexity requirements)
+- The `encryptionsalt` is generated automatically when you first set a secret value
+- All team members need to configure their own `Pulumi.dev.yaml` file locally
