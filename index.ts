@@ -37,10 +37,20 @@ const vmSize = config.require("vmSize");
 // Note: Azure Site Recovery has specific OS support requirements
 // See: https://aka.ms/a2a_supported_linux_os_versions
 // Ubuntu 20.04 LTS has better ASR support than 22.04 LTS
+// 
+// IMPORTANT: Kernel Compatibility Issue Resolution
+// If you encounter mobility service kernel compatibility errors (e.g., kernel 5.15.0-1089-azure not supported),
+// consider these alternatives:
+// 1. Use a specific Ubuntu 20.04 image version (not "latest") - e.g., "20.04.202301100"
+// 2. Use Ubuntu 18.04 LTS which has broader ASR kernel support:
+//    - sourceVmImageOffer: "0001-com-ubuntu-server-bionic"
+//    - sourceVmImageSku: "18_04-lts-gen2"
+//    - sourceVmImageVersion: "latest" or specific version
+// 3. Use RHEL 8.x or CentOS 8.x which have excellent ASR support
 const sourceVmImagePublisher = config.get("sourceVmImagePublisher") || "Canonical";
 const sourceVmImageOffer = config.get("sourceVmImageOffer") || "0001-com-ubuntu-server-focal";
 const sourceVmImageSku = config.get("sourceVmImageSku") || "20_04-lts-gen2";
-const sourceVmImageVersion = config.get("sourceVmImageVersion") || "latest";
+const sourceVmImageVersion = config.get("sourceVmImageVersion") || "20.04.202109080";
 
 // Phase 1: Core Infrastructure - Resource Groups & Networking
 
