@@ -17,6 +17,9 @@ This project demonstrates Azure Site Recovery (ASR) capabilities for Azure-to-Az
       - [Required Configuration Values](#required-configuration-values)
       - [Setting Configuration Values](#setting-configuration-values)
     - [Deployment](#deployment)
+  - [Testing Failover](#testing-failover)
+    - [Multi-VM Consistency Group Failover](#multi-vm-consistency-group-failover)
+      - [Steps to Perform Multi-VM Failover](#steps-to-perform-multi-vm-failover)
 
 ## Key Components
 
@@ -195,3 +198,47 @@ This command will:
    - Target region infrastructure
 
 **Note:** The deployment may take several minutes to complete, especially the ASR replication setup.
+
+## Testing Failover
+
+### Multi-VM Consistency Group Failover
+
+When VMs are part of a multi-VM consistency replication group (like `sourcevm-pmk-multivm-group`), they cannot be failed over individually. Instead, you must create a recovery plan that includes all VMs in the group and perform the failover through that plan.
+
+#### Steps to Perform Multi-VM Failover
+
+1. **Identify all VMs in the replication group:**
+   - Navigate to your Recovery Services vault in the Azure portal
+   - Go to **"Replicated items"**
+   - Look for all VMs that belong to the `sourcevm-pmk-multivm-group`
+   - Note down all VM names in the consistency group
+
+2. **Create a Recovery Plan:**
+   - In your Recovery Services vault, go to **"Recovery Plans (Site Recovery)"**
+   - Click **"Create recovery plan"**
+   - Provide a name (e.g., `pmk-multivm-recovery-plan`)
+   - Select the source and target locations:
+     - **Source:** Primary region (e.g., East US)
+     - **Target:** Target region (e.g., West US)
+   - Add **ALL VMs** from the `sourcevm-pmk-multivm-group` to this plan
+   - Review and create the recovery plan
+
+3. **Perform Failover via Recovery Plan:**
+   - Select your newly created recovery plan (`pmk-multivm-recovery-plan`)
+   - Click **"Failover"**
+   - Choose the recovery point:
+     - **Latest processed:** Most recent crash-consistent point
+     - **Latest app-consistent:** Most recent application-consistent point
+     - **Custom:** Select a specific recovery point
+   - Review the failover settings
+   - Confirm and start the failover
+
+4. **Monitor Failover Progress:**
+   - Monitor the failover job in the **"Jobs"** section
+   - Verify that all VMs in the group are being failed over together
+   - Wait for the failover to complete successfully
+
+5. **Post-Failover Validation:**
+   - Verify that all VMs are running in the target region
+   - Test application connectivity and functionality
+   - Validate data consistency across all VMs
