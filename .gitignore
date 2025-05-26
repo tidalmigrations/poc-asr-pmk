@@ -2,3 +2,4 @@
 /node_modules/
 Pulumi.dev.yaml
 /plans/
+.env
