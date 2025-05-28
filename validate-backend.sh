@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Provided by Tidal <support@tidalcloud.com>
 # Pulumi Backend Validation Script
 # Validates that the Azure Blob Storage backend for Pulumi is properly configured
 

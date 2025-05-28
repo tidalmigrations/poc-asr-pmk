@@ -1,3 +1,4 @@
+# Provided by Tidal <support@tidalcloud.com>
 name: pulumi-asr-pmk-poc
 description: ASR with SSE-PMK POC - Azure Site Recovery with Server-Side Encryption using Platform-Managed Keys
 runtime:
