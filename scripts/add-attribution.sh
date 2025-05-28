@@ -83,7 +83,6 @@ $attribution_comment\\
 # Function to add attribution to Markdown files
 add_attribution_markdown() {
     local file="$1"
-    local attribution_comment="<!-- $ATTRIBUTION -->"
     
     # Check if attribution already exists
     if grep -q "$ATTRIBUTION" "$file"; then
@@ -91,9 +90,11 @@ add_attribution_markdown() {
         return 0
     fi
     
-    # Add attribution at the end of the file
+    # Add attribution at the end of the file in Markdown format
     echo "" >> "$file"
-    echo "$attribution_comment" >> "$file"
+    echo "---" >> "$file"
+    echo "" >> "$file"
+    echo "*$ATTRIBUTION*" >> "$file"
     
     print_success "Added attribution to $file"
 }

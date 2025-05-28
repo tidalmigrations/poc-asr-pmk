@@ -243,4 +243,6 @@ When VMs are part of a multi-VM consistency replication group (like `sourcevm-pm
    - Test application connectivity and functionality
    - Validate data consistency across all VMs
 
-<!-- Provided by Tidal <support@tidalcloud.com> -->
+---
+
+*Provided by Tidal <support@tidalcloud.com>*
